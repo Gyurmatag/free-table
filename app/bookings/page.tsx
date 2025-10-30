@@ -48,6 +48,27 @@ type BookingWithDetails = {
   };
 };
 
+function formatDateTime(value: BookingWithDetails["createdAt"]) {
+  try {
+    if (value instanceof Date) {
+      return value.toISOString().replace("T", " ").slice(0, 19);
+    }
+    if (typeof value === "number") {
+      // If seconds precision, convert to ms
+      const ms = value < 1e12 ? value * 1000 : value;
+      return new Date(ms).toISOString().replace("T", " ").slice(0, 19);
+    }
+    // string
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().replace("T", " ").slice(0, 19);
+    }
+    return String(value);
+  } catch {
+    return String(value);
+  }
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +103,7 @@ export default function BookingsPage() {
   return (
     <>
       <Header />
-      <div className="mx-auto p-6 max-w-6xl">
+      <div className="mx-auto p-6 max-w-[1400px]">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">All Bookings</h1>
           <p className="text-muted-foreground">Manage and view all restaurant reservations</p>
@@ -140,22 +161,36 @@ export default function BookingsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
+                      <TableHead>Restaurant ID</TableHead>
+                      <TableHead>Table ID</TableHead>
+                      <TableHead>Customer ID</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Restaurant</TableHead>
+                      <TableHead>Table</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Time</TableHead>
                       <TableHead>Guests</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Special Requests</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead>Updated At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {bookings.map((booking) => (
                       <TableRow key={booking.id}>
                         <TableCell className="font-medium">#{booking.id}</TableCell>
+                        <TableCell>{booking.restaurantId}</TableCell>
+                        <TableCell>{booking.tableId}</TableCell>
+                        <TableCell>{booking.customerId}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <p className="font-medium">{booking.customer.name}</p>
                             <p className="text-muted-foreground text-xs">
                               {booking.customer.email}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {booking.customer.phone}
                             </p>
                           </div>
                         </TableCell>
@@ -167,9 +202,27 @@ export default function BookingsPage() {
                             </p>
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <p className="font-medium">#{booking.table.tableNumber}</p>
+                            <p className="text-muted-foreground text-xs">
+                              capacity: {booking.table.capacity}
+                            </p>
+                          </div>
+                        </TableCell>
                         <TableCell>{booking.bookingDate}</TableCell>
                         <TableCell>{booking.bookingTime}</TableCell>
                         <TableCell>{booking.partySize}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary">
+                            {booking.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-[250px] whitespace-pre-wrap">
+                          {booking.specialRequests || "-"}
+                        </TableCell>
+                        <TableCell>{formatDateTime(booking.createdAt)}</TableCell>
+                        <TableCell>{formatDateTime(booking.updatedAt)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
