@@ -48,30 +48,24 @@ type BookingWithDetails = {
   };
 };
 
-function formatDateTime(value: BookingWithDetails["createdAt"]) {
-  try {
-    if (value instanceof Date) {
-      return value.toISOString().replace("T", " ").slice(0, 19);
-    }
-    if (typeof value === "number") {
-      // If seconds precision, convert to ms
-      const ms = value < 1e12 ? value * 1000 : value;
-      return new Date(ms).toISOString().replace("T", " ").slice(0, 19);
-    }
-    // string
-    const d = new Date(value);
-    if (!isNaN(d.getTime())) {
-      return d.toISOString().replace("T", " ").slice(0, 19);
-    }
-    return String(value);
-  } catch {
-    return String(value);
-  }
-}
-
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "confirmed":
+        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      case "cancelled":
+        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      case "completed":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
+      case "no-show":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+    }
+  };
 
   useEffect(() => {
     fetchBookings();
@@ -103,7 +97,7 @@ export default function BookingsPage() {
   return (
     <>
       <Header />
-      <div className="mx-auto p-6 max-w-[1400px]">
+      <div className="mx-auto p-6 max-w-6xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">All Bookings</h1>
           <p className="text-muted-foreground">Manage and view all restaurant reservations</p>
@@ -172,8 +166,6 @@ export default function BookingsPage() {
                       <TableHead>Guests</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Special Requests</TableHead>
-                      <TableHead>Created At</TableHead>
-                      <TableHead>Updated At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -214,15 +206,17 @@ export default function BookingsPage() {
                         <TableCell>{booking.bookingTime}</TableCell>
                         <TableCell>{booking.partySize}</TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary">
+                          <span
+                            className={`inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                              booking.status
+                            )}`}
+                          >
                             {booking.status}
                           </span>
                         </TableCell>
                         <TableCell className="max-w-[250px] whitespace-pre-wrap">
                           {booking.specialRequests || "-"}
                         </TableCell>
-                        <TableCell>{formatDateTime(booking.createdAt)}</TableCell>
-                        <TableCell>{formatDateTime(booking.updatedAt)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
