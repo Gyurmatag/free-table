@@ -48,6 +48,30 @@ type BookingWithDetails = {
   };
 };
 
+// Safely convert various timestamp formats (Date | seconds | ms | ISO string) to Date
+function toDate(input: string | number | Date): Date {
+  if (input instanceof Date) return input;
+  if (typeof input === "number") {
+    return new Date(input > 1e12 ? input : input * 1000);
+  }
+  // string case
+  const n = Number(input);
+  if (!Number.isNaN(n)) {
+    return new Date(n > 1e12 ? n : n * 1000);
+  }
+  return new Date(input);
+}
+
+function formatDateTime(input: string | number | Date) {
+  try {
+    const d = toDate(input);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleString();
+  } catch {
+    return "-";
+  }
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,16 +88,6 @@ export default function BookingsPage() {
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-    }
-  };
-
-  const formatDateTime = (value: string | number | Date) => {
-    try {
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return String(value);
-      return d.toLocaleString();
-    } catch {
-      return String(value);
     }
   };
 
