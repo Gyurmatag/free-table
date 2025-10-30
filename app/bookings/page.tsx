@@ -67,6 +67,16 @@ export default function BookingsPage() {
     }
   };
 
+  const formatDateTime = (value: string | number | Date) => {
+    try {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return d.toLocaleString();
+    } catch {
+      return String(value);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
   }, []);
@@ -166,6 +176,8 @@ export default function BookingsPage() {
                       <TableHead>Guests</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Special Requests</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead>Updated At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -217,6 +229,8 @@ export default function BookingsPage() {
                         <TableCell className="max-w-[250px] whitespace-pre-wrap">
                           {booking.specialRequests || "-"}
                         </TableCell>
+                        <TableCell>{formatDateTime(booking.createdAt)}</TableCell>
+                        <TableCell>{formatDateTime(booking.updatedAt)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

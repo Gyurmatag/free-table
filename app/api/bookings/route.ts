@@ -266,7 +266,6 @@ export async function GET(request: NextRequest) {
         customer: true,
       },
       orderBy: (bookings, { desc }) => [desc(bookings.createdAt)],
-      limit: 100,
     });
 
     return NextResponse.json({ bookings: allBookings });
@@ -278,4 +277,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
