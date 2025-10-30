@@ -71,7 +71,7 @@ const apiEndpoints = [
         restaurantId: 1,
         tableId: 1,
         customerId: 1,
-        bookingDate: "2025-10-15",
+        bookingDate: "2025-10-13",
         bookingTime: "19:00",
         partySize: 4,
         status: "confirmed",
