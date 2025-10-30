@@ -17,9 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-
-type PrimitiveDate = string | number | Date;
 
 type BookingWithDetails = {
   id: number;
@@ -31,8 +28,8 @@ type BookingWithDetails = {
   partySize: number;
   status: string;
   specialRequests: string | null;
-  createdAt: PrimitiveDate;
-  updatedAt: PrimitiveDate;
+  createdAt: string | number | Date;
+  updatedAt: string | number | Date;
   restaurant: {
     id?: number;
     name: string;
@@ -51,15 +48,6 @@ type BookingWithDetails = {
   };
 };
 
-function formatDate(value: PrimitiveDate) {
-  if (value instanceof Date) return value.toLocaleString();
-  const n = typeof value === "string" ? Date.parse(value) : Number(value);
-  // Drizzle with unixepoch() often returns seconds, convert if it looks like seconds
-  const ms = !isNaN(n) && n < 10_000_000_000 ? n * 1000 : n; // naive seconds check
-  const d = new Date(ms);
-  return isNaN(d.getTime()) ? String(value) : d.toLocaleString();
-}
-
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,19 +65,6 @@ export default function BookingsPage() {
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "cancelled":
-        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
-      case "completed":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
     }
   };
 
@@ -120,6 +95,43 @@ export default function BookingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-6 p-4 bg-muted rounded-lg">
+              <h3 className="text-sm font-semibold mb-3">Booking Status Descriptions</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 whitespace-nowrap min-w-[90px]">
+                    confirmed
+                  </span>
+                  <p className="text-muted-foreground flex-1">
+                    Active, awaiting customer arrival
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 whitespace-nowrap min-w-[90px]">
+                    completed
+                  </span>
+                  <p className="text-muted-foreground flex-1">
+                    Successfully finished dining
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 whitespace-nowrap min-w-[90px]">
+                    cancelled
+                  </span>
+                  <p className="text-muted-foreground flex-1">
+                    Cancelled by customer/restaurant
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 whitespace-nowrap min-w-[90px]">
+                    no-show
+                  </span>
+                  <p className="text-muted-foreground flex-1">
+                    Customer did not arrive
+                  </p>
+                </div>
+              </div>
+            </div>
             {bookings.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No bookings found</p>
             ) : (
@@ -128,60 +140,36 @@ export default function BookingsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
-                      <TableHead>Restaurant ID</TableHead>
-                      <TableHead>Table ID</TableHead>
-                      <TableHead>Customer ID</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Restaurant</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Time</TableHead>
                       <TableHead>Guests</TableHead>
-                      <TableHead>Table</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Special Requests</TableHead>
-                      <TableHead>Created At</TableHead>
-                      <TableHead>Updated At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {bookings.map((booking) => (
                       <TableRow key={booking.id}>
                         <TableCell className="font-medium">#{booking.id}</TableCell>
-                        <TableCell>{booking.restaurantId}</TableCell>
-                        <TableCell>{booking.tableId}</TableCell>
-                        <TableCell>{booking.customerId}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <p className="font-medium">{booking.customer.name}</p>
-                            <p className="text-muted-foreground text-xs">{booking.customer.email}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {booking.customer.email}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <p className="font-medium">{booking.restaurant.name}</p>
-                            <p className="text-muted-foreground text-xs">{booking.restaurant.cuisine}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {booking.restaurant.cuisine}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>{booking.bookingDate}</TableCell>
                         <TableCell>{booking.bookingTime}</TableCell>
                         <TableCell>{booking.partySize}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{booking.table.tableNumber}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                              booking.status
-                            )}`}
-                          >
-                            {booking.status}
-                          </span>
-                        </TableCell>
-                        <TableCell className="max-w-[20rem] truncate" title={booking.specialRequests ?? undefined}>
-                          {booking.specialRequests ?? "—"}
-                        </TableCell>
-                        <TableCell>{formatDate(booking.createdAt)}</TableCell>
-                        <TableCell>{formatDate(booking.updatedAt)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
